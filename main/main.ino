@@ -215,7 +215,7 @@ void gpsSetup() {
     Serial.begin(115200);
     Serial.write(PMTK_SET_NMEA_OUTPUT_RMCGGA); // Turn on GPRMC and GPGGA
     Serial.write("\r\n");
-    Serial.write(PMTK_SET_NMEA_UPDATE_10HZ); // 5 Hz
+    Serial.write(PMTK_SET_NMEA_UPDATE_10HZ); // 10 Hz
     Serial.write("\r\n");
 }
 
@@ -251,14 +251,14 @@ void gpsLoop() {
 
         // Calculate altitude, speed and bearing
         int altitude = gps.altitude.meters() > 6000.f ? (max(0, round(gps.altitude.meters() + 500.f)) & 0x7FFF) | 0x8000 : max(0, round((gps.altitude.meters() + 500.f) * 10.f)) & 0x7FFF; 
-        int speed = gps.speed.knots() > 600.f ? ((max(0, round(gps.speed.knots() * 10.f))) & 0x7FFF) | 0x8000 : (max(0, round(gps.speed.knots() * 100.f))) & 0x7FFF; 
+        int speed = gps.speed.kmph() > 600.f ? ((max(0, round(gps.speed.kmph() * 10.f))) & 0x7FFF) | 0x8000 : (max(0, round(gps.speed.kmph() * 100.f))) & 0x7FFF; 
         int bearing = max(0, round(gps.course.deg() * 100.f));
 
         // Create main data
         tempData[0] = ((gpsSyncBits & 0x7) << 5) | ((timeSinceHourStart >> 16) & 0x1F);
         tempData[1] = timeSinceHourStart >> 8;
         tempData[2] = timeSinceHourStart;
-        tempData[3] = ((min(0x3, gps.location.FixQuality()) & 0x3) << 6) | ((min(0x3F, gps.satellites.value())) & 0x3F);
+        tempData[3] = ((min(0x3, ((int)gps.location.FixQuality()-48)) & 0x3) << 6) | ((min(0x3F, gps.satellites.value())) & 0x3F);
         tempData[4] = latitude >> 24;
         tempData[5] = latitude >> 16;
         tempData[6] = latitude >> 8;
